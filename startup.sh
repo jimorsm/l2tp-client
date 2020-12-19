@@ -12,15 +12,17 @@ ipsec initnss
 sleep 1
 ipsec pluto --stderrlog --config /etc/ipsec.conf
 sleep 5
-#ipsec setup start
-#sleep 1
-#ipsec auto --add L2TP-PSK
-#sleep 1
 ipsec auto --up L2TP-PSK
-sleep 3
-ipsec --status
-sleep 3
+
+if ! (ipsec status | grep 'ISAKMP SA established' && ipsec status | grep 'IPsec SA established')
+    then
+        echo "IPSEC connection couldn't be established. "
+        exit 1
+fi
+
+(
+    sleep 25 && echo "c myVPN" > /var/run/xl2tpd/l2tp-control && sleep 15 && (/monitor-vpn.sh start &) && sleep 2 && eval "$VPN_CMD_ON_CONNECTED"
+) &
 
 # startup xl2tpd ppp daemon then send it a connect command
-(sleep 7 && echo "c myVPN" > /var/run/xl2tpd/l2tp-control) &
 exec /usr/sbin/xl2tpd -p /var/run/xl2tpd.pid -c /etc/xl2tpd/xl2tpd.conf -C /var/run/xl2tpd/l2tp-control -D

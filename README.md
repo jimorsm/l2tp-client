@@ -2,6 +2,17 @@ l2tp-ipsec-vpn-client
 ===
 [![](https://images.microbadger.com/badges/image/ubergarm/l2tp-ipsec-vpn-client.svg)](https://microbadger.com/images/ubergarm/l2tp-ipsec-vpn-client) [![](https://images.microbadger.com/badges/version/ubergarm/l2tp-ipsec-vpn-client.svg)](https://microbadger.com/images/ubergarm/l2tp-ipsec-vpn-client) [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/ubergarm/l2tp-ipsec-vpn-client/blob/master/LICENSE)
 
+# wolasss fork changes
+
+1. libreswan version 3.29 instead of buggy 3.32 (cannot establish connection to some vpns on 3.32 - known bug)
+2. added possibility to run commend after connection is established $VPN_CMD_ON_CONNECTED
+
+ex. `export VPN_CMD_ON_CONNECTED='ip route add 192.168.42.0/24 dev ppp0'`
+
+3. monitors vpn connection if $VPN_LOCAL_GATEWAY is provided and if ppp interface is not found (sometimes it is not established or connection is lost) it kills this container. (Allowing kubernetes or docker daemon to restart it and hence re-establish connection to the vpn)
+
+ex. `export VPN_LOCAL_GATEWAY='192.168.42.1'`
+
 A tiny Alpine based docker image to quickly setup an L2TP over IPsec VPN client w/ PSK.
 
 ## Motivation
