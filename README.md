@@ -2,16 +2,14 @@ l2tp-ipsec-vpn-client
 ===
 [![](https://images.microbadger.com/badges/image/ubergarm/l2tp-ipsec-vpn-client.svg)](https://microbadger.com/images/ubergarm/l2tp-ipsec-vpn-client) [![](https://images.microbadger.com/badges/version/ubergarm/l2tp-ipsec-vpn-client.svg)](https://microbadger.com/images/ubergarm/l2tp-ipsec-vpn-client) [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/ubergarm/l2tp-ipsec-vpn-client/blob/master/LICENSE)
 
-# wolasss fork changes
+# jimorsm fork changes
 
-1. libreswan version 3.29 instead of buggy 3.32 (cannot establish connection to some vpns on 3.32 - known bug)
-2. added possibility to run commend after connection is established $VPN_CMD_ON_CONNECTED
+1. automatically chose whether use ipsec or not according to the variable VPN_PSK
+2. add custom route if CUSTOM_ROUTE is setted
 
-ex. `export VPN_CMD_ON_CONNECTED='ip route add 192.168.42.0/24 dev ppp0'`
+ex. `export CUSTOM_ROUTE='192.168.42.0/24,10.10.0.0/16'`
 
-3. monitors vpn connection if $VPN_LOCAL_GATEWAY is provided and if ppp interface is not found (sometimes it is not established or connection is lost) it kills this container. (Allowing kubernetes or docker daemon to restart it and hence re-establish connection to the vpn)
-
-ex. `export VPN_LOCAL_GATEWAY='192.168.42.1'`
+3. health check, if ppp interface is not found or connection not available (sometimes it is not established or connection is lost) it kills this container. (Allowing kubernetes or docker daemon to restart it and hence re-establish connection to the vpn)
 
 A tiny Alpine based docker image to quickly setup an L2TP over IPsec VPN client w/ PSK.
 
@@ -37,33 +35,28 @@ Setup environment variables for your credentials and config:
 Now run it (you can daemonize of course after debugging):
 
     docker run --rm -it --privileged --net=host \
-               -v /lib/modules:/lib/modules:ro \
                -e VPN_SERVER_IPV4 \
                -e VPN_PSK \
                -e VPN_USERNAME \
                -e VPN_PASSWORD \
-                  ubergarm/l2tp-ipsec-vpn-client
+                  jimorsm/l2tp-client
 
 ## Route
-From the host machine configure traffic to route through VPN link:
+By default set ppp0 device as gateway, pass environment variable CUSTOM_ROUTE to avoid it and using custom routes
 
-    # confirm the ppp0 link and get the peer e.g. (192.0.2.1) IPV4 address
-    ip a show ppp0
-    # route traffic for a specific target ip through VPN tunnel address
-    sudo ip route add 1.2.3.4 via 192.0.2.1 dev ppp0
-    # route all traffice through VPN tunnel address
-    sudo ip route add default via 192.0.2.1 dev ppp0
-    # or
-    sudo route add -net default gw 192.0.2.1 dev ppp0
-    # and delete old default routes e.g.
-    sudo route del -net default gw 10.0.1.1 dev eth0
-    # when your done add your normal routes and delete the VPN routes
-    # or just `docker stop` and you'll probably be okay
+    export VPN_SERVER_IPV4='1.2.3.4'
+    export VPN_PSK='my pre shared key'
+    export VPN_USERNAME='myuser@myhost.com'
+    export VPN_PASSWORD='mypass'
+    export CUSTOM_ROUTE='10.7.0.0/16,192.168.3.0/24'
 
-## Test
-You can see if your IP address changes after adding appropriate routes e.g.:
-
-    curl icanhazip.com
+    docker run --rm -it --privileged --net=host \
+               -e VPN_SERVER_IPV4 \
+               -e VPN_PSK \
+               -e VPN_USERNAME \
+               -e VPN_PASSWORD \
+               -e CUSTOM_ROUTE \
+                  jimorsm/l2tp-client
 
 ## Debugging
 On your VPN client localhost machine you may need to `sudo modprobe af_key`
@@ -73,20 +66,6 @@ pluto[17]: No XFRM/NETKEY kernel interface detected
 pluto[17]: seccomp security for crypto helper not supported
 ```
 
-## Strongswan
-The previous `strongswan` based version of this docker image is still available on docker hub here:
-```bash
-docker pull ubergarm/l2tp-ipsec-vpn-client:strongswan
-```
-
-## TODO
-- [x] `ipsec` connection works
-- [x] `xl2tpd` ppp0 device creates
-- [x] Can forward traffic through tunnel from host
-- [x] Pass in credentials as environment variables
-- [x] Dynamically template out the default config files with `sed` on start
-- [x] Update to use `libreswan` instead of `strongswan`
-- [ ] See if this can work without privileged and net=host modes to be more portable
 
 ## References
 * [royhills/ike-scan](https://github.com/royhills/ike-scan)
