@@ -1,8 +1,12 @@
-l2tp-ipsec-vpn-client
+l2tp-client
 ===
 [![](https://images.microbadger.com/badges/image/ubergarm/l2tp-ipsec-vpn-client.svg)](https://microbadger.com/images/ubergarm/l2tp-ipsec-vpn-client) [![](https://images.microbadger.com/badges/version/ubergarm/l2tp-ipsec-vpn-client.svg)](https://microbadger.com/images/ubergarm/l2tp-ipsec-vpn-client) [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/ubergarm/l2tp-ipsec-vpn-client/blob/master/LICENSE)
 
-# jimorsm fork changes
+A tiny Alpine based docker image to quickly setup an L2TP over IPsec (or not) VPN client.
+
+forked from https://github.com/wolasss/l2tp-ipsec-vpn-client which fored from https://github.com/ubergarm/l2tp-ipsec-vpn-client
+
+# Jimorsm fork changes
 
 1. automatically chose whether use ipsec or not according to the variable VPN_PSK
 2. add custom route if CUSTOM_ROUTE is setted
@@ -11,28 +15,26 @@ ex. `export CUSTOM_ROUTE='192.168.42.0/24,10.10.0.0/16'`
 
 3. health check, if ppp interface is not found or connection not available (sometimes it is not established or connection is lost) it kills this container. (Allowing kubernetes or docker daemon to restart it and hence re-establish connection to the vpn)
 
-A tiny Alpine based docker image to quickly setup an L2TP over IPsec VPN client w/ PSK.
 
-## Motivation
-Does your office or a client have a VPN server already setup and you
-just need to connect to it? Do you use Linux and are jealous that the
-one thing a MAC can do better is quickly setup this kind of VPN? Then
-here is all you need:
+
+# Usage
+
+Main parameters which needed
 
 1. VPN Server Address
-2. Pre Shared Key
+2. Pre Shared Key (Optional)
 3. Username
 4. Password
 
 ## Run
-Setup environment variables for your credentials and config:
+- Setup environment variables for your credentials and config:
 
     export VPN_SERVER_IPV4='1.2.3.4'
     export VPN_PSK='my pre shared key'
     export VPN_USERNAME='myuser@myhost.com'
     export VPN_PASSWORD='mypass'
 
-Now run it (you can daemonize of course after debugging):
+- Run it (you can daemonize of course after debugging):
 
     docker run --rm -it --privileged --net=host \
                -e VPN_SERVER_IPV4 \
@@ -41,22 +43,20 @@ Now run it (you can daemonize of course after debugging):
                -e VPN_PASSWORD \
                   jimorsm/l2tp-client
 
-## Route
-By default set ppp0 device as gateway, pass environment variable CUSTOM_ROUTE to avoid it and using custom routes
+## More parameters
 
-    export VPN_SERVER_IPV4='1.2.3.4'
-    export VPN_PSK='my pre shared key'
-    export VPN_USERNAME='myuser@myhost.com'
-    export VPN_PASSWORD='mypass'
-    export CUSTOM_ROUTE='10.7.0.0/16,192.168.3.0/24'
+- CUSTOM_ROUTE
+    - By default set ppp0 device as gateway, pass environment variable CUSTOM_ROUTE to avoid it and using custom routes
+    - Format: CIDRs split by comma
+    - example: CUSTOM_ROUTE='10.7.0.0/16,192.168.3.0/24'
 
-    docker run --rm -it --privileged --net=host \
-               -e VPN_SERVER_IPV4 \
-               -e VPN_PSK \
-               -e VPN_USERNAME \
-               -e VPN_PASSWORD \
-               -e CUSTOM_ROUTE \
-                  jimorsm/l2tp-client
+- USEPEERDNS
+    - set true to enable usepeerdns
+
+- DEBUG
+    - set true to enable debug 
+
+
 
 ## Debugging
 On your VPN client localhost machine you may need to `sudo modprobe af_key`

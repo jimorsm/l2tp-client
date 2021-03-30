@@ -21,16 +21,18 @@ if [ -n "$VPN_PSK" ]; then
     fi
 fi
 
-# use peer dns or not
+# if USERPEERDNS not setted, disable usepeerdns
 if [ -z "$USEPEERDNS" ]; then
     sed -i "/usepeerdns/d" /etc/ppp/options.l2tpd.client
 fi
 
-# (
-#     sleep 25 && echo "c myVPN" >/var/run/xl2tpd/l2tp-control && sleep 15 && (/monitor-vpn.sh start &) && sleep 2 && eval "$VPN_CMD_ON_CONNECTED"
-# ) &
+# if DEBUG not setted, disable DEBUG
+if [ -z "$DEBUG" ]; then
+    sed -i "/debug/d" /etc/xl2tpd/xl2tpd.conf
+    sed -i "/debug/d" /etc/ppp/options.l2tpd.client
+fi
 
-# if use coustom route disable defaultroute in ppp options
+# if COUSTOM_ROUTE setted, disable default route in ppp options
 # COUSTOM_ROUTE='192.168.42.0/24,192.168.43.0/24'
 if [ -n "$CUSTOM_ROUTE" ]; then
     sed -i "/defaultroute/d" /etc/ppp/options.l2tpd.client
@@ -52,7 +54,8 @@ if [ -n "$CUSTOM_ROUTE" ]; then
     ) &
 fi
 
+# health-check
 /health-check.sh &
 
-# startup xl2tpd ppp daemon then send it a connect command
+# startup xl2tpd ppp daemon
 exec /usr/sbin/xl2tpd -p /var/run/xl2tpd.pid -c /etc/xl2tpd/xl2tpd.conf -C /var/run/xl2tpd/l2tp-control -D
