@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eo pipefail
+
 # template out all the config files using env vars
 sed -i "s/right=.*/right=$VPN_SERVER_IPV4/" /etc/ipsec.conf
 echo ": PSK $VPN_PSK" >/etc/ipsec.secrets
@@ -48,6 +50,7 @@ if [ -n "$CUSTOM_ROUTE" ]; then
                         ip route add "$CIDR" dev ppp0
                     fi
                 done
+                break
             fi
             sleep 10
         done

@@ -28,21 +28,30 @@ Main parameters which needed
 
 ## Run
 - Setup environment variables for your credentials and config:
-
+```
     export VPN_SERVER_IPV4='1.2.3.4'
     export VPN_PSK='my pre shared key'
     export VPN_USERNAME='myuser@myhost.com'
     export VPN_PASSWORD='mypass'
-
+```
 - Run it (you can daemonize of course after debugging):
-
+```
     docker run --rm -it --privileged --net=host \
                -e VPN_SERVER_IPV4 \
                -e VPN_PSK \
                -e VPN_USERNAME \
                -e VPN_PASSWORD \
                   jimorsm/l2tp-client
-
+```
+- non privileged 
+```
+docker run --rm -it --cap-add=NET_ADMIN --device=/dev/ppp \
+               -e VPN_SERVER_IPV4 \
+               -e VPN_PSK \
+               -e VPN_USERNAME \
+               -e VPN_PASSWORD \
+                  jimorsm/l2tp-client
+```
 ## More parameters
 
 - CUSTOM_ROUTE
